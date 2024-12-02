@@ -47,9 +47,43 @@ func GetUserByEmail(db *sql.DB, email string) *User {
 	return &user
 }
 
-func CreateNewUser(db *sql.DB, user *User) (*User, error){
-	query := QCreateNewUser();
-	
+func GetAllPosts(db *sql.DB) ([]Post, error) {
+	// Define the query to select all posts
+	query := QGetAllPosts()
+
+	// Execute the query
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching posts: %v", err)
+	}
+	defer rows.Close()
+
+	// Slice to store the results
+	var posts []Post
+
+	// Loop through the result set
+	for rows.Next() {
+		var post Post
+		// Scan the row into the Post struct
+		err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.CreatedAt, &post.FeaturedMedia.ID)
+		if err != nil {
+			return nil, fmt.Errorf("error scanning row: %v", err)
+		}
+		// Append the post to the posts slice
+		posts = append(posts, post)
+	}
+
+	// Check for any errors encountered during iteration
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating over rows: %v", err)
+	}
+
+	return posts, nil
+}
+
+func CreateNewUser(db *sql.DB, user *User) (*User, error) {
+	query := QCreateNewUser()
+
 	result, err := db.Exec(query, user.Name, user.Email, user.Password)
 	if err != nil {
 		return nil, fmt.Errorf("failed to insert user: %w", err)
@@ -67,9 +101,8 @@ func CreateNewUser(db *sql.DB, user *User) (*User, error){
 	return user, nil
 }
 
-
 func QCreateUserTable() string {
-    return `
+	return `
         CREATE TABLE IF NOT EXISTS users (
             id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(100) NOT NULL,
@@ -79,8 +112,7 @@ func QCreateUserTable() string {
     `
 }
 
-
-func QFindUserByEmail() string{
+func QFindUserByEmail() string {
 	return `
 		SELECT *
 		FROM users
@@ -88,9 +120,15 @@ func QFindUserByEmail() string{
 	`
 }
 
-func QCreateNewUser() string{
+func QCreateNewUser() string {
 	return `
 		INSERT INTO users (name, email, password)
 		VALUES (?,?,?)
+	`
+}
+
+func QGetAllPosts() string {
+	return `
+		SELECT id, title, content, created_at, media_id FROM posts
 	`
 }

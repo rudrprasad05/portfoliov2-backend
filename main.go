@@ -17,7 +17,7 @@ type Message struct {
 }
 
 func main() {
-	
+
 	router := mux.NewRouter()
 	config := connect.Config{
 		Username: "root",
@@ -45,10 +45,13 @@ func main() {
 	// routes
 	router.HandleFunc("/404", routes.Handle404)
 	router.HandleFunc("/", routes.GetHome).Methods("GET")
+
 	router.HandleFunc("/auth/register", routes.PostRegisterUser).Methods("POST")
 	router.HandleFunc("/auth/login", routes.PostLoginUser).Methods("POST")
 
-	protected := router.PathPrefix("/protected").Subrouter()
+	router.HandleFunc("/posts", routes.GetAllPosts).Methods("GET")
+
+	protected := router.PathPrefix("/admin").Subrouter()
 	protected.Use(routes.AuthMiddleware)
 
 	protected.HandleFunc("", routes.GetProtectedAuth).Methods("GET")

@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -23,4 +24,10 @@ func GenerateJWT(email string) (string, error) {
 
 	// Sign the token
 	return token.SignedString(jwtSecret)
+}
+
+func checError(e error) {
+	if e != nil {
+		fmt.Println("err", e)
+	}
 }

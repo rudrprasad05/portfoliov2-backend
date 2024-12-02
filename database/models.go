@@ -10,44 +10,48 @@ type User struct {
 	CreatedAt *time.Time `db:"created_at"`
 }
 
-const user = `
+const UserTable = `
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255),
-    email VARCHAR(255) UNIQUE,
-    password VARCHAR(255)
-);
-`
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);`
 
 type Image struct {
-	ID        *int   `db:"id"`
-	Link      string `db:"link"`
-	Media     *Media
+	ID        *int       `db:"id"`
+	Link      string     `db:"link"`
+	MediaID   *int       `db:"media_id"` // Foreign key to Media
 	CreatedAt *time.Time `db:"created_at"`
 }
 
-const image = `CREATE TABLE images (
+const ImageTable = `
+CREATE TABLE images (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    link VARCHAR(100) NOT NULL UNIQUE,
-    media_id INT UNIQUE, -- Foreign key to Media table
+    link VARCHAR(255) NOT NULL UNIQUE,
+    media_id INT UNIQUE,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (media_id) REFERENCES media(id) ON DELETE SET NULL
-`
+);`
 
 type Media struct {
-	ID        *int   `db:"id"`
-	Name      string `db:"name"`
-	Alt       string `db:"alt"`
-	Image     *Image
+	ID        *int       `db:"id"`
+	Name      string     `db:"name"`
+	Alt       string     `db:"alt"`
+	ImageID   *int       `db:"image_id"` // Foreign key to Image
 	CreatedAt *time.Time `db:"created_at"`
 }
 
-const media = `CREATE TABLE media (
+const MediaTable = `
+CREATE TABLE media (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100),
-    alt VARCHAR(100) NOT NULL,
-    image_id INT UNIQUE, -- Foreign key to Image table
+    name VARCHAR(255) NOT NULL,
+    alt VARCHAR(255) NOT NULL,
+    image_id INT UNIQUE,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (image_id) REFERENCES images(id) ON DELETE SET NULL
-`
+);`
 
 type Tag struct {
 	ID        *int       `db:"id"`
@@ -55,10 +59,11 @@ type Tag struct {
 	CreatedAt *time.Time `db:"created_at"`
 }
 
-const tag = `CREATE TABLE tags (
+const TagTable = `
+CREATE TABLE tags (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );`
 
 type Post struct {
@@ -67,15 +72,18 @@ type Post struct {
 	Content       string     `db:"content"`
 	CreatedAt     *time.Time `db:"created_at"`
 	Tags          []*Tag
-	FeaturedImage *Image `db:"image"`
+	FeaturedMedia *Media `db:"media_id"`
 }
 
-const post = `CREATE TABLE posts (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
-        content TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );`
+const PostTable = `
+CREATE TABLE posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    content TEXT,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    media_id INT, -- Foreign key to Media table
+    FOREIGN KEY (media_id) REFERENCES media(id) ON DELETE SET NULL
+);`
 
 type PostTag struct {
 	PostID int `db:"post_id"`
@@ -91,9 +99,17 @@ const postTags = `CREATE TABLE post_tags (
 );`
 
 type Content struct {
-	ID        *int       `db:"id"`
-	Type      *TypeInt   `db:"type"`
-	Content   string     `db:"content"`
-	CreatedAt *time.Time `db:"created_at"`
-	Index     int        `db:"index"`
+	ID          *int       `db:"id"`
+	Type        *TypeInt   `db:"type"`
+	Data        string     `db:"Data"`
+	CreatedAt   *time.Time `db:"created_at"`
+	IndexOnPage int        `db:"index_on_page"`
 }
+
+const content = `CREATE TABLE content (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    type INT NOT NULL CHECK (type IN (0, 1, 2, 3, 4, 5)),
+    data TEXT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    index_on_page INT NOT NULL
+);`
