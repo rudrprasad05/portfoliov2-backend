@@ -4,12 +4,12 @@ import (
 	"log"
 	"net/http"
 
-	"portfolio_backend/database"
 	"portfolio_backend/routes"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"github.com/rudrprasad05/go-logs/logs"
+	"github.com/rudrprasad05/go-sql/connect"
 )
 
 type Message struct {
@@ -19,7 +19,7 @@ type Message struct {
 func main() {
 	
 	router := mux.NewRouter()
-	config := database.Config{
+	config := connect.Config{
 		Username: "root",
 		Password: "",
 		Host:     "127.0.0.1",
@@ -34,7 +34,7 @@ func main() {
 	defer logger.Close()
 
 	// Initialize the database
-	db, err := database.InitDB(config)
+	db, err := connect.InitDB(&config)
 	routes := &routes.Routes{DB: db, LOG: logger}
 	if err != nil {
 		log.Fatalf("Database initialization failed: %v", err)
